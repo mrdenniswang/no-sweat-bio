@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffusion and Osmosis Practice</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--ink:#1d2733;--mute:#5b6b7c;--line:#dbe2ea;--accent:#0b7a75;--accent2:#e07a1f;--good:#2e8b57;--bad:#c0392b}
+@media (prefers-color-scheme:dark){:root{--bg:#10161d;--card:#18212b;--ink:#e8eef4;--mute:#9fb0c1;--line:#2b3846;--accent:#3cc1b9;--accent2:#f0a050;--good:#5ccf8f;--bad:#ff7a6b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+h1{font-size:1.3rem;margin:0}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:8px 14px}
+button.ghost{background:transparent;color:var(--accent)}
+button:disabled{opacity:.5;cursor:default}
+input[type=text],input[type=number],textarea{font:inherit;width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+textarea{min-height:110px}
+.crit{display:grid;grid-template-columns:1fr;gap:4px;padding:10px 0;border-top:1px solid var(--line)}
+.crit:first-of-type{border-top:0}
+.crit .t{display:flex;justify-content:space-between;gap:8px;font-size:.95rem}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+.bar i.sec{background:var(--good)}
+.tag{font-size:.75rem;border-radius:6px;padding:2px 8px;border:1px solid var(--line);color:var(--mute)}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.opt.sel{border-color:var(--accent);outline:2px solid var(--accent)}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--bg))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--bg))}
+.fb{margin-top:10px;padding:10px;border-radius:8px;background:var(--bg);border-left:4px solid var(--accent)}
+.fb.good{border-color:var(--good)}.fb.bad{border-color:var(--bad)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sc{font-size:.85rem;color:var(--mute)}
+label.k{display:block;padding:6px 0}
+svg{max-width:100%;height:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.muted{color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Diffusion and Osmosis Practice</h1>
+  <div class="stats" id="stats"></div>
+</header>
+<div id="app"></div>
+</div>
+<script>
+const CRIT=[
+ "I can define diffusion as the net movement of particles from a region of higher concentration to a region of lower concentration.",
+ "I can describe how diffusion enables gaseous exchange in plants (stomata) and humans (alveoli and blood).",
+ "I can define osmosis as the net movement of water molecules from higher water potential to lower water potential across a partially permeable membrane.",
+ "I can predict and describe the effects of osmosis on animal tissues (e.g. red blood cells bursting or crenating).",
+ "I can predict and describe the effects of osmosis on plant tissues, using turgid, flaccid and plasmolysed.",
+ "I can explain the importance of turgor pressure in keeping soft-stemmed plants upright.",
+ "I can describe an investigation to demonstrate these osmotic effects.",
+ "I can calculate the percentage change in mass of potato strips to account for different initial masses.",
+ "I can identify the cell sap concentration of a cell on a graph (where the curve crosses the x-axis)."
+];
+const SHORT=["Diffusion","Gaseous exchange","Osmosis definition","Osmosis in animals","Osmosis in plants","Turgor pressure","Investigation","% change in mass","Reading the graph"];
+
+const Q=[
+{id:"1c",c:0,tier:"Core",type:"mcq",pts:10,q:"Which statement best defines diffusion?",
+ o:["Net movement of particles from a region of lower concentration to higher concentration, using energy","Net movement of particles from a region of higher concentration to a region of lower concentration","Net movement of water across a partially permeable membrane","Movement of particles that only happens in liquids"],a:1,
+ hint:"Think about which way particles move down a concentration gradient.",
+ fb:"Diffusion is the net movement of particles from higher to lower concentration. It is passive and happens in gases and liquids."},
+{id:"1s",c:0,tier:"Stretch",type:"short",pts:15,q:"Mei Ling opens a bottle of perfume at the front of the class. After a while, Aiden at the back can smell it. Explain why, using the word net.",
+ hint:"Where are the particles most concentrated at the start? Where are they fewest?",
+ keys:["Perfume particles move randomly / spread out from the front where they are at higher concentration","Net movement is towards the back, where concentration is lower (down the concentration gradient)","Continues until particles are evenly spread, so there is no net movement"],
+ model:"Perfume particles are at higher concentration near the bottle and move randomly. There is a net movement from the region of higher concentration at the front to the region of lower concentration at the back, down the concentration gradient. This continues until the particles are evenly spread and there is no net movement."},
+{id:"2c",c:1,tier:"Core",type:"mcq",pts:10,q:"In the human lungs, which describes the diffusion of oxygen?",
+ o:["From the blood in capillaries into the alveoli","From the alveoli air into the blood in the capillaries","From the trachea into the bronchi only","From the stomata into the alveoli"],a:1,
+ hint:"Where is the oxygen concentration higher: the air in the alveoli or the blood arriving at the lungs?",
+ fb:"Oxygen concentration is higher in the alveolar air than in the blood arriving at the lungs, so oxygen diffuses into the blood. Carbon dioxide diffuses the other way."},
+{id:"2s",c:1,tier:"Stretch",type:"short",pts:15,q:"Describe how diffusion allows gaseous exchange in a leaf in daylight and in the alveoli of a human.",
+ hint:"Use higher and lower concentration for each gas, in each organ.",
+ keys:["Leaf: carbon dioxide diffuses in through open stomata (used in photosynthesis so lower inside) into air spaces and mesophyll cells","Leaf: oxygen diffuses out through the stomata","Alveoli: oxygen diffuses from alveolar air into blood in capillaries","Alveoli: carbon dioxide diffuses from blood into alveolar air to be breathed out"],
+ model:"In a leaf, carbon dioxide is used up in photosynthesis so its concentration is lower inside. It diffuses in through open stomata and into the air spaces and mesophyll cells. Oxygen made in photosynthesis diffuses out through the stomata. In the alveoli, oxygen diffuses from the air (higher concentration) into the blood in the capillaries (lower), and carbon dioxide diffuses from the blood into the alveoli to be breathed out. Breathing and blood flow keep the gradients steep."},
+{id:"3c",c:2,tier:"Core",type:"mcq",pts:10,q:"Which statement correctly defines osmosis?",
+ o:["Net movement of water molecules from lower to higher water potential across any membrane","Net movement of solute molecules from higher to lower concentration across a partially permeable membrane","Net movement of water molecules from higher water potential to lower water potential across a partially permeable membrane","Movement of water only into plant cells"],a:2,
+ hint:"Osmosis is about water molecules, a membrane that is partially permeable, and water potential.",
+ fb:"Osmosis is the net movement of water molecules from a solution of higher water potential to one of lower water potential across a partially permeable membrane."},
+{id:"3s",c:2,tier:"Stretch",type:"mcq",pts:15,q:"Solution X (0.1 mol/dm³ sucrose) and solution Y (0.5 mol/dm³ sucrose) are separated by a membrane that lets water through but not sucrose. What happens?",
+ o:["Sucrose moves from Y to X","Water moves from Y to X because Y has more solute","Net movement of water is from X to Y, because X has higher water potential","There is no net movement of water"],a:2,
+ hint:"More dilute solution means higher water potential.",
+ fb:"X is more dilute so it has higher water potential. Water moves by osmosis from X to Y. Sucrose cannot cross the membrane."},
+{id:"4c",c:3,tier:"Core",type:"mcq",pts:10,q:"A red blood cell is placed in distilled water. What happens, and why?",
+ o:["It shrinks, because water leaves by osmosis","It stays the same size, because blood cells do not use osmosis","It bursts, because water enters by osmosis and there is no cell wall","It becomes turgid, because the cell wall stops it bursting"],a:2,
+ hint:"Does a red blood cell have a cell wall?",
+ fb:"Distilled water has higher water potential than the cell contents, so water enters by osmosis. Animal cells have no cell wall, so the cell bursts (haemolysis)."},
+{id:"4s",c:3,tier:"Stretch",type:"short",pts:15,q:"Aiden's red blood cells are placed in a very concentrated salt solution. Predict and explain what happens.",
+ hint:"Compare the water potential outside the cell with the water potential inside.",
+ keys:["Water potential is lower outside the cell than inside","Water leaves the cell by osmosis across the partially permeable membrane","Cell shrinks / becomes crenated (shrivelled)"],
+ model:"The salt solution has lower water potential than the cell contents. Water leaves the red blood cells by osmosis, across the partially permeable cell membrane, from higher to lower water potential. The cells shrink and become crenated."},
+{id:"5c",c:4,tier:"Core",type:"mcq",pts:10,q:"A plant cell is placed in a very concentrated sucrose solution. The cell membrane pulls away from the cell wall. What is this called?",
+ o:["Turgid","Flaccid","Plasmolysed","Crenated"],a:2,
+ hint:"Crenation is for animal cells. This is a plant cell and the membrane has pulled away from the wall.",
+ fb:"The cell is plasmolysed: water has left the vacuole and cytoplasm by osmosis and the membrane has pulled away from the wall."},
+{id:"5s",c:4,tier:"Stretch",type:"short",pts:15,q:"Compare a turgid cell and a plasmolysed cell. Say where each is placed and what the water does.",
+ hint:"Mention water potential, the vacuole and the cell wall.",
+ keys:["Turgid: in dilute solution / water, so water enters by osmosis","Turgid: vacuole swells and membrane pushes against the cell wall, which stops it bursting","Plasmolysed: in concentrated solution, so water leaves by osmosis","Plasmolysed: vacuole shrinks and membrane pulls away from the cell wall"],
+ model:"A turgid cell is placed in a dilute solution or water with higher water potential, so water enters by osmosis. The vacuole swells and the membrane presses against the cell wall, which stops the cell bursting. A plasmolysed cell is in a concentrated solution with lower water potential, so water leaves by osmosis. The vacuole shrinks and the membrane pulls away from the wall. A flaccid cell is in between: it has lost some water and is soft."},
+{id:"6c",c:5,tier:"Core",type:"mcq",pts:10,q:"Why does a soft-stemmed plant such as balsam droop when it is not watered?",
+ o:["The cells become turgid and push against each other","Water leaves the cells, they become flaccid and turgor pressure falls","The cell walls dissolve","The stomata close and the cells burst"],a:1,
+ hint:"What happens to turgor pressure when cells lose water?",
+ fb:"Without enough water, cells become flaccid and turgor pressure drops, so the stem can no longer be held upright."},
+{id:"6s",c:5,tier:"Stretch",type:"short",pts:15,q:"Explain how turgor pressure keeps a soft-stemmed plant upright, and why Mei Ling's potted plant droops on a hot, dry day.",
+ hint:"Link water uptake, turgid cells, support and water loss.",
+ keys:["Cells take in water by osmosis and become turgid","Turgid cells press against cell walls, creating turgor pressure that makes the stem firm and gives support","Hot and dry: more water lost (transpiration) than taken up","Cells become flaccid, turgor falls and the stem droops"],
+ model:"Cells take in water by osmosis and become turgid. The membrane presses against the cell wall, creating turgor pressure that makes the tissue firm and supports the stem. On a hot, dry day more water is lost by transpiration than is taken up, so cells become flaccid, turgor pressure falls and the plant droops."},
+{id:"7c",c:6,tier:"Core",type:"mcq",pts:10,q:"In a potato strip investigation, why are the strips blotted dry before weighing?",
+ o:["To kill the cells","To make the strips colder","To remove surface solution so the mass only shows water gained or lost by the cells","To increase the rate of osmosis"],a:2,
+ hint:"What else could be on the outside of the strip that adds mass?",
+ fb:"Blotting removes solution on the surface, which would otherwise add extra mass and make the results unfair."},
+{id:"7s",c:6,tier:"Stretch",type:"short",pts:15,q:"Describe an investigation Mei Ling's group could do to show the effect of osmosis on potato tissue.",
+ hint:"Think: prepare, treat, wait, measure, calculate, control, repeat.",
+ keys:["Cut potato strips of the same size (e.g. with a cork borer) and measure initial mass","Place in different concentrations of sucrose solution (e.g. 0 to 1.0 mol/dm³), including distilled water","Leave for the same time, then remove and blot dry","Measure final mass and calculate percentage change in mass","Control other variables (volume, temperature, time) and repeat for reliability"],
+ model:"Cut potato strips of equal size with a cork borer and measure each initial mass. Place one strip in each of several sucrose solutions of different concentrations (including distilled water), using the same volume at the same temperature. Leave for the same time. Remove the strips, blot dry and measure the final mass. Calculate the percentage change in mass. Repeat for reliability. Strips in dilute solutions gain mass; strips in concentrated solutions lose mass."},
+{id:"8c",c:7,tier:"Core",type:"calc",pts:10,q:"Mei Ling's potato strip had an initial mass of 2.50 g and a final mass of 2.80 g. Calculate the percentage change in mass (use + for increase, - for decrease).",
+ ans:12,tol:0.05,unit:"%",hint:"% change = (final - initial) / initial x 100.",
+ fb:"(2.80 - 2.50) / 2.50 x 100 = +12%. Dividing by the initial mass lets you compare strips that started with different masses."},
+{id:"8s",c:7,tier:"Stretch",type:"calc",pts:15,q:"Aiden's strip started at 3.20 g and ended at 2.88 g. Calculate the percentage change in mass. Then think: why is this better than comparing the changes in grams with Mei Ling's?",
+ ans:-10,tol:0.05,unit:"%",hint:"Remember the sign. The strip lost mass.",
+ fb:"(2.88 - 3.20) / 3.20 x 100 = -10%. Percentage change accounts for different starting masses, so strips can be compared fairly."},
+{id:"9c",c:8,tier:"Core",type:"graph",pts:10,q:"The graph shows the percentage change in mass of potato strips in different sucrose concentrations. What is the concentration of the potato cell sap (mol/dm³)?",
+ pts_g:[[0,14],[0.2,7],[0.4,0],[0.6,-6],[0.8,-10],[1,-12]],ans:0.4,tol:0.03,unit:"mol/dm³",hint:"Look where the line crosses the x-axis (0% change).",
+ fb:"The curve crosses the x-axis at 0.4 mol/dm³. There is no net movement of water, so the cell sap has the same concentration as the solution."},
+{id:"9s",c:8,tier:"Stretch",type:"graph",pts:15,q:"Read the graph carefully (the curve does not cross exactly on a plotted point). What is the cell sap concentration (mol/dm³, 2 decimal places)?",
+ pts_g:[[0,9],[0.15,6],[0.3,3],[0.5,-1],[0.7,-4],[1,-8]],ans:0.45,tol:0.03,unit:"mol/dm³",hint:"Find the two plotted points either side of 0% and estimate where the straight line between them crosses the axis.",
+ fb:"The line crosses the x-axis at about 0.45 mol/dm³. At this concentration there is no net movement of water, so the potato cells are isotonic with the solution."}
+];
+
+const ENDPOINT="https://script.google.com/macros/s/AKfycbyDuzC6G9Z9WYJQfR6v-6mAJfKhb_sZSErvC_8K2BMC0JO2TVEwklsKsvmmqZv41_i_/exec";
+let S={name:"",points:0,streak:0,best:{}};
+let lastAns="";
+function send(rec){
+ if(ENDPOINT.indexOf("PASTE")===0)return;
+ fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(rec)}).catch(()=>{
+  try{const q=JSON.parse(localStorage.getItem("dop_queue")||"[]");q.push(rec);localStorage.setItem("dop_queue",JSON.stringify(q))}catch(e){}
+ });
+}
+function flushQueue(){
+ try{const q=JSON.parse(localStorage.getItem("dop_queue")||"[]");if(!q.length)return;localStorage.removeItem("dop_queue");q.forEach(send)}catch(e){}
+}
+try{const t=localStorage.getItem("dop_state");if(t)S=Object.assign(S,JSON.parse(t))}catch(e){}
+function save(){try{localStorage.setItem("dop_state",JSON.stringify(S))}catch(e){}}
+const app=document.getElementById("app");
+const best=id=>S.best[id]||0;
+function prog(c){const a=Q.filter(q=>q.c===c);return a.reduce((s,q)=>s+best(q.id),0)/a.length}
+function status(c){const p=prog(c);const done=Q.filter(q=>q.c===c).some(q=>S.best[q.id]!==undefined);return p>=0.75?"Secure":(!done?"Not started":(p>=0.4?"Developing":"Keep going"))}
+function badge(){return S.points>=300?"Osmosis Pro":S.points>=150?"Climber":S.points>=50?"Starter":"New"}
+function stats(){document.getElementById("stats").innerHTML=`<span class="pill">Points: ${S.points}</span><span class="pill">Streak: ${S.streak}</span><span class="pill">Badge: ${badge()}</span>`}
+function pick(c){const a=Q.filter(q=>q.c===c);return a.find(q=>best(q.id)<0.75)||a.sort((x,y)=>best(x.id)-best(y.id))[0]}
+function recommended(){let m=0,v=2;for(let c=0;c<9;c++){const p=prog(c);if(p<v){v=p;m=c}}return m}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+
+function home(){
+ stats();
+ const rec=recommended();
+ let h=`<div class="card"><label for="nm"><b>Your seat number</b> <span class="muted">(e.g. 12)</span></label><input type="text" id="nm" inputmode="numeric" value="${esc(S.name)}" maxlength="6"></div>`;
+ h+=`<div class="card"><b>How you are doing against the success criteria</b>`;
+ for(let c=0;c<9;c++){const p=Math.round(prog(c)*100),st=status(c);
+  h+=`<div class="crit"><div class="t"><span><b>${c+1}.</b> ${esc(CRIT[c])}</span><span class="tag">${st}</span></div><div class="bar"><i class="${st==="Secure"?"sec":""}" style="width:${p}%"></i></div><div class="row" style="margin:0"><button class="ghost" onclick="start(${c})">Practise this</button><span class="sc">${p}%</span></div></div>`}
+ h+=`</div><div class="card"><b>Suggested next:</b> ${rec+1}. ${SHORT[rec]}<div class="row"><button onclick="start(${rec})">Start suggested</button><button class="ghost" onclick="exportSum()">Copy my summary</button><button class="ghost" onclick="resetAll()">Reset</button></div><div id="exp"></div></div>`;
+ app.innerHTML=h;
+ document.getElementById("nm").oninput=e=>{S.name=e.target.value;save()};
+}
+function start(c){if(!String(S.name||"").trim()){alert("Please enter your seat number first.");return}ask(pick(c))}
+let cur=null,hinted=false,sel=null,done=false;
+function ask(q){
+ cur=q;hinted=false;sel=null;done=false;
+ let h=`<div class="card"><div class="row" style="margin:0 0 8px"><span class="tag">Criterion ${q.c+1}: ${SHORT[q.c]}</span><span class="tag">${q.tier}</span><span class="tag">${q.pts} pts</span></div><p><b>${esc(q.q)}</b></p>`;
+ if(q.type==="graph")h+=graph(q.pts_g);
+ if(q.type==="mcq")q.o.forEach((o,i)=>h+=`<button class="opt" id="o${i}" onclick="pickOpt(${i})">${esc(o)}</button>`);
+ if(q.type==="calc"||q.type==="graph")h+=`<input type="number" step="any" id="num" placeholder="Your answer (${q.unit})">`;
+ if(q.type==="short")h+=`<textarea id="txt" placeholder="Write your answer here"></textarea>`;
+ h+=`<div class="row" id="btns"><button id="chk" onclick="check()">${q.type==="short"?"Show model answer":"Check"}</button><button class="ghost" onclick="hint()">Hint (-3 pts)</button><button class="ghost" onclick="home()">Back</button></div><div id="out"></div></div>`;
+ app.innerHTML=h;
+}
+function graph(p){
+ const W=380,H=250,L=44,B=34,T=14,R=14,xm=1,ymin=-16,ymax=16;
+ const X=x=>L+x/xm*(W-L-R),Y=y=>T+(ymax-y)/(ymax-ymin)*(H-T-B);
+ let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Graph of percentage change in mass against sucrose concentration">`;
+ for(let y=-15;y<=15;y+=5)s+=`<line x1="${L}" x2="${W-R}" y1="${Y(y)}" y2="${Y(y)}" stroke="currentColor" stroke-opacity="${y===0?0.8:0.15}"/><text x="${L-6}" y="${Y(y)+4}" font-size="10" text-anchor="end" fill="currentColor">${y}</text>`;
+ for(let x=0;x<=1.001;x+=0.2)s+=`<line x1="${X(x)}" x2="${X(x)}" y1="${T}" y2="${H-B}" stroke="currentColor" stroke-opacity="0.12"/><text x="${X(x)}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="currentColor">${x.toFixed(1)}</text>`;
+ s+=`<polyline fill="none" stroke="#e07a1f" stroke-width="2.5" points="${p.map(a=>X(a[0])+","+Y(a[1])).join(" ")}"/>`;
+ p.forEach(a=>s+=`<circle cx="${X(a[0])}" cy="${Y(a[1])}" r="3.5" fill="#e07a1f"/>`);
+ s+=`<text x="${(L+W-R)/2}" y="${H-4}" font-size="11" text-anchor="middle" fill="currentColor">Sucrose concentration (mol/dm³)</text><text transform="translate(11 ${(T+H-B)/2}) rotate(-90)" font-size="11" text-anchor="middle" fill="currentColor">% change in mass</text></svg>`;
+ return s;
+}
+function pickOpt(i){if(done)return;sel=i;document.querySelectorAll(".opt").forEach((b,j)=>b.classList.toggle("sel",j===i))}
+function hint(){if(done)return;hinted=true;document.getElementById("out").innerHTML=`<div class="fb"><b>Hint:</b> ${esc(cur.hint)}</div>`}
+function award(score){
+ const base=Math.round(cur.pts*score),pen=hinted&&score>0?3:0,g=Math.max(0,base-pen);
+ S.points+=g;
+ send({seat:String(S.name).trim(),qid:cur.id,criterion:cur.c+1,tier:cur.tier,type:cur.type,answer:lastAns,score:Math.round(score*100)/100,points:g,hint:hinted?"Yes":"No"});
+ if(score>=0.75)S.streak++;else S.streak=0;
+ S.best[cur.id]=Math.max(best(cur.id),hinted&&score>=1?0.9:score);
+ save();stats();return g;
+}
+function finish(score,fbText,good){
+ done=true;
+ const g=award(score);
+ document.getElementById("btns").innerHTML=`<button onclick="nextQ()">Next</button><button class="ghost" onclick="ask(cur)">Try again</button><button class="ghost" onclick="home()">Progress</button>`;
+ document.getElementById("out").innerHTML+=`<div class="fb ${good?"good":"bad"}">${fbText}<div class="sc">+${g} pts${S.streak>=3?" | Streak "+S.streak+"!":""}</div></div>`;
+}
+function check(){
+ if(done)return;const q=cur;
+ if(q.type==="mcq"){
+  if(sel===null){document.getElementById("out").innerHTML=`<div class="fb">Choose an option first.</div>`;return}
+  document.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;if(j===q.a)b.classList.add("right");else if(j===sel)b.classList.add("wrong")});
+  const ok=sel===q.a;lastAns=q.o[sel];document.getElementById("out").innerHTML="";
+  finish(ok?1:0,(ok?"<b>Correct.</b> ":"<b>Not quite.</b> ")+esc(q.fb),ok);return;
+ }
+ if(q.type==="calc"||q.type==="graph"){
+  const v=parseFloat(document.getElementById("num").value);
+  if(isNaN(v)){document.getElementById("out").innerHTML=`<div class="fb">Enter a number first.</div>`;return}
+  const tol=q.type==="graph"?q.tol:Math.abs(q.ans)*q.tol;
+  const ok=Math.abs(v-q.ans)<=tol;lastAns=String(v);document.getElementById("out").innerHTML="";
+  finish(ok?1:0,(ok?"<b>Correct.</b> ":`<b>Not quite.</b> You answered ${v}. `)+esc(q.fb),ok);return;
+ }
+ // short answer self-marking
+ lastAns=document.getElementById("txt").value;
+ done=true;
+ let h=`<div class="fb"><b>Model answer:</b><br>${esc(q.model)}</div><p><b>Mark yourself.</b> Tick each key point that is in your answer:</p>`;
+ q.keys.forEach((k,i)=>h+=`<label class="k"><input type="checkbox" class="kp"> ${esc(k)}</label>`);
+ h+=`<div class="row"><button onclick="selfMark()">Submit my marking</button></div>`;
+ document.getElementById("out").innerHTML=h;
+ document.getElementById("btns").innerHTML="";
+}
+function selfMark(){
+ const n=[...document.querySelectorAll(".kp")].filter(c=>c.checked).length,t=cur.keys.length,sc=n/t;
+ done=false;
+ const msg=sc>=0.75?"Strong answer. You are on track for this criterion.":sc>=0.4?"Getting there. Re-read the key points you missed and try again.":"Revisit the model answer, then use Try again.";
+ document.getElementById("out").innerHTML=`<div class="fb ${sc>=0.75?"good":"bad"}"><b>${n} / ${t} key points.</b> ${msg}</div>`;
+ finish(sc,"",sc>=0.75);
+}
+function nextQ(){
+ const a=Q.filter(q=>q.c===cur.c),nq=a.find(q=>q.id!==cur.id&&best(q.id)<0.75);
+ if(nq)ask(nq);else home();
+}
+function exportSum(){
+ let t=`Diffusion and Osmosis summary\nSeat: ${S.name||"(no seat)"}\nPoints: ${S.points} | Badge: ${badge()}\n`;
+ for(let c=0;c<9;c++)t+=`${c+1}. ${SHORT[c]}: ${Math.round(prog(c)*100)}% (${status(c)})\n`;
+ const box=document.getElementById("exp");
+ box.innerHTML=`<textarea id="sumtxt" readonly>${esc(t)}</textarea><div class="sc">Copy this and paste it into your task in SLS.</div>`;
+ const ta=document.getElementById("sumtxt");ta.select();
+ try{navigator.clipboard.writeText(t)}catch(e){}
+}
+function resetAll(){if(confirm("Reset all your progress on this device?")){S={name:S.name,points:0,streak:0,best:{}};save();home()}}
+flushQueue();
+home();
+</script>
+</body>
+</html>
